@@ -40,7 +40,7 @@ func CreateJWT(secret string, payload Payload) (string, error) {
 
 	byteArrSecret := []byte(secret)
 
-	message := base64URLEncode(headerJSON) + "." + base64URLEncode(payloadJSON)
+	message := Base64URLEncode(headerJSON) + "." + Base64URLEncode(payloadJSON)
 
 	byteArrMessage := []byte(message)
 
@@ -49,12 +49,12 @@ func CreateJWT(secret string, payload Payload) (string, error) {
 
 	signature := h.Sum(nil)
 
-	jwt := message + "." + base64URLEncode(signature)
+	jwt := message + "." + Base64URLEncode(signature)
 
 	return jwt, nil
 
 }
 
-func base64URLEncode(data []byte) string {
+func Base64URLEncode(data []byte) string {
 	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(data)
 }

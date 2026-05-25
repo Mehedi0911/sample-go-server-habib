@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"net/http"
+	"sample-server/config"
 	"sample-server/database"
 	"sample-server/utils"
+	"strconv"
 )
 
 type loginDto struct {
@@ -20,13 +22,26 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	findUser, err := database.FindUserByEmail(loginData.Email, loginData.Password)
+	user, err := database.FindUserByEmail(loginData.Email, loginData.Password)
 
 	if err != nil {
 		http.Error(w, "Invalid email or password", http.StatusBadRequest)
 		return
 	}
 
-	utils.SendData(w, findUser, http.StatusOK)
+	accessToken, err := utils.CreateJWT(config.GetConfig().JwtSecret, utils.Payload{
+		Sub:         strconv.Itoa(user.ID),
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		Email:       user.Email,
+		IsShopOwner: user.IsShopOwner,
+	})
+
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	utils.SendData(w, accessToken, http.StatusOK)
 
 }

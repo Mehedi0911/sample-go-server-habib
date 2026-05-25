@@ -12,6 +12,7 @@ type Config struct {
 	HTTPPort    int
 	Version     string
 	ServiceName string
+	JwtSecret   string
 }
 
 var config Config
@@ -37,6 +38,12 @@ func loadConfig() {
 		os.Exit(1)
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		fmt.Println("JWT_SECRET environment variable not set, using default value 'your_secret_key_here'")
+		os.Exit(1)
+	}
+
 	httpPortInt, err := strconv.ParseInt(httpPort, 10, 64)
 	if err != nil {
 		fmt.Println("Failed to parse HTTP_PORT environment variable")
@@ -47,6 +54,7 @@ func loadConfig() {
 		Version:     version,
 		HTTPPort:    int(httpPortInt), //type casting
 		ServiceName: serviceName,
+		JwtSecret:   jwtSecret,
 	}
 }
 
