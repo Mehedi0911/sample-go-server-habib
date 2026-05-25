@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"net/http"
-	"sample-server/database"
 )
 
 func SendData(w http.ResponseWriter, data interface{}, statusCode int) {
@@ -12,7 +11,7 @@ func SendData(w http.ResponseWriter, data interface{}, statusCode int) {
 	encoder.Encode(data)
 }
 
-func HandleDecode(r *http.Request, newProduct *database.Product) error {
+func HandleDecode(r *http.Request, data interface{}) error {
 	decoder := json.NewDecoder(r.Body)
-	return decoder.Decode(&newProduct)
+	return decoder.Decode(data)
 }

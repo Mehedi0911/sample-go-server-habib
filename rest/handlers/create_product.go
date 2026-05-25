@@ -14,8 +14,11 @@ func HandleCreateProducts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
-	newProduct.ID = len(database.ProductList) + 1
-	database.ProductList = append(database.ProductList, newProduct)
+	prd := database.CreateProduct(newProduct)
+	if prd == nil {
+		http.Error(w, "Failed to create product", http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(201)
-	utils.SendData(w, newProduct, http.StatusCreated)
+	utils.SendData(w, prd, http.StatusCreated)
 }
