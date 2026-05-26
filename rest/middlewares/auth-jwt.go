@@ -4,12 +4,11 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"net/http"
-	"sample-server/config"
 	"sample-server/utils"
 	"strings"
 )
 
-func AuthJWT(next http.Handler) http.Handler {
+func (m *Middlewares) AuthJWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//validate JWT
 		header := r.Header.Get("Authorization")
@@ -41,8 +40,7 @@ func AuthJWT(next http.Handler) http.Handler {
 
 		byteArrMessage := []byte(message)
 
-		cnf := config.GetConfig()
-		byteArrSecret := []byte(cnf.JwtSecret)
+		byteArrSecret := []byte(m.cfg.JwtSecret)
 
 		h := hmac.New(sha256.New, byteArrSecret)
 		h.Write(byteArrMessage)

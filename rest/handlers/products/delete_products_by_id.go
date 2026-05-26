@@ -1,13 +1,12 @@
-package handlers
+package products
 
 import (
 	"net/http"
-	"sample-server/database"
 	"sample-server/utils"
 	"strconv"
 )
 
-func HandleDeleteProductByID(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleDeleteProductByID(w http.ResponseWriter, r *http.Request) {
 	pathValue := r.PathValue("id")
 
 	pId, err := strconv.Atoi(pathValue)
@@ -16,7 +15,11 @@ func HandleDeleteProductByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	database.DeleteProduct(pId)
+	err = h.productRepo.Delete(pId)
+	if err != nil {
+		http.Error(w, "Failed to delete product", http.StatusInternalServerError)
+		return
+	}
 
 	utils.SendData(w, "Deleted Successfully", http.StatusOK)
 }

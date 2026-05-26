@@ -1,9 +1,7 @@
-package handlers
+package users
 
 import (
 	"net/http"
-	"sample-server/config"
-	"sample-server/database"
 	"sample-server/utils"
 	"strconv"
 )
@@ -13,7 +11,7 @@ type loginDto struct {
 	Password string `json:"password"`
 }
 
-func HandleLogin(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	var loginData loginDto
 
@@ -22,14 +20,14 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := database.FindUserByEmail(loginData.Email, loginData.Password)
+	user, err := h.userRepo.FindUserByEmail(loginData.Email, loginData.Password)
 
 	if err != nil {
 		http.Error(w, "Invalid email or password", http.StatusBadRequest)
 		return
 	}
 
-	accessToken, err := utils.CreateJWT(config.GetConfig().JwtSecret, utils.Payload{
+	accessToken, err := utils.CreateJWT(h.cfg.JwtSecret, utils.Payload{
 		Sub:         strconv.Itoa(user.ID),
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,

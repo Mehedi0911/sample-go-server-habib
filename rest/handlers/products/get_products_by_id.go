@@ -1,14 +1,13 @@
-package handlers
+package products
 
 import (
 	"fmt"
 	"net/http"
-	"sample-server/database"
 	"sample-server/utils"
 	"strconv"
 )
 
-func GetProductByID(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetProductByID(w http.ResponseWriter, r *http.Request) {
 	pathValue := r.PathValue("id")
 
 	pId, err := strconv.Atoi(pathValue)
@@ -17,7 +16,11 @@ func GetProductByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product := database.GetProductByID(pId)
+	product, err := h.productRepo.Get(pId)
+	if err != nil {
+		http.Error(w, "Failed to fetch product", http.StatusInternalServerError)
+		return
+	}
 
 	if product == nil {
 		utils.SendData(w, fmt.Sprintf("Product not found with id %d", pId), http.StatusNotFound)
