@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"sample-server/config"
 	"sample-server/infra/db"
 	"sample-server/repo"
@@ -14,15 +15,21 @@ func Serve() {
 	cfg := config.GetConfig()
 	middlewares := middlewares.NewMiddlewares(cfg)
 
-	dbCon, err := db.NewConnection()
+	dbCon, err := db.NewConnection(cfg.DBConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	userRepo := repo.NewUserRepo()
+	err = db.MigrateDB(dbCon, "./migrations")
+	if err != nil {
+		fmt.Println("Failed to migrate database:", err)
+		panic(err)
+	}
+
+	userRepo := repo.NewUserRepo(dbCon)
 	userHandler := users.NewHandler(userRepo, cfg)
 
-	productRepo := repo.NewProductRepo()
+	productRepo := repo.NewProductRepo(dbCon)
 	productHandler := products.NewHandler(middlewares, productRepo)
 
 	server := rest.NewServer(cfg, userHandler, productHandler)

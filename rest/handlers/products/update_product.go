@@ -33,17 +33,17 @@ func (h *Handler) HandleUpdateProducts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
-	prd, err := h.productRepo.Update(repo.Product{
-		ID:          req.ID,
+	updateErr := h.productRepo.Update(&repo.Product{
+		ID:          pId,
 		Title:       req.Title,
 		Description: req.Description,
 		Price:       req.Price,
 		ImgURL:      req.ImgURL,
 	})
-	if err != nil {
+	if updateErr != nil {
 		http.Error(w, "Failed to update product", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(200)
-	utils.SendData(w, prd, http.StatusCreated)
+	utils.SendData(w, fmt.Sprintf("Product updated successfully"), http.StatusCreated)
 }

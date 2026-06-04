@@ -1,6 +1,7 @@
 package users
 
 import (
+	"fmt"
 	"net/http"
 	"sample-server/utils"
 	"strconv"
@@ -23,6 +24,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userRepo.FindUserByEmail(loginData.Email, loginData.Password)
 
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "Invalid email or password", http.StatusBadRequest)
 		return
 	}

@@ -1,14 +1,19 @@
 package repo
 
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+
+	"github.com/jmoiron/sqlx"
+)
 
 type User struct {
-	ID          int    `json:"id"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	Email       string `json:"email"`
-	Password    string `json:"password"`
-	IsShopOwner bool   `json:"is_shop_owner"`
+	ID          int    `json:"id" db:"id"`
+	FirstName   string `json:"first_name" db:"first_name"`
+	LastName    string `json:"last_name" db:"last_name"`
+	Email       string `json:"email" db:"email"`
+	Password    string `json:"password" db:"password"`
+	IsShopOwner bool   `json:"is_shop_owner" db:"is_shop_owner"`
 }
 
 type UserRepo interface {
@@ -18,20 +23,44 @@ type UserRepo interface {
 }
 
 type userRepo struct {
-	userList []User
+	db *sqlx.DB
 }
 
-func NewUserRepo() UserRepo {
-	return &userRepo{}
-
+func NewUserRepo(db *sqlx.DB) UserRepo {
+	return &userRepo{
+		db: db,
+	}
 }
 
 func (r *userRepo) Create(user User) (*User, error) {
-	if user.ID != 0 {
-		return &user, nil
+
+	query := `INSERT INTO users (
+	first_name, 
+	last_name, 
+	email, 
+	password, 
+	is_shop_owner
+	) 
+	VALUES (
+	:first_name, :last_name, :email, :password, :is_shop_owner
+	) 
+	RETURNING id`
+
+	var userId int
+
+	row, err := r.db.NamedQuery(query, user)
+	if err != nil {
+		fmt.Printf("Error executing query: %v\n", err)
+		return nil, fmt.Errorf("Failed to execute query: %v", err)
 	}
-	user.ID = len(r.userList) + 1
-	r.userList = append(r.userList, user)
+	if row.Next() {
+		err = row.Scan(&userId)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to scan result: %v", err)
+		}
+	}
+
+	user.ID = userId
 	return &user, nil
 }
 
@@ -39,12 +68,18 @@ func (r *userRepo) FindUserByEmail(email string, password string) (*User, error)
 	if email == "" {
 		return nil, fmt.Errorf("Empty email provided")
 	}
-	for _, user := range r.userList {
-		if user.Email == email {
-			if user.Password == password {
-				return &user, nil
-			}
+	query := `SELECT id, first_name, last_name, email, password, is_shop_owner FROM users WHERE email = $1`
+	var user User
+	err := r.db.Get(&user, query, email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("User not found")
 		}
+		return nil, fmt.Errorf("Failed to execute query: %v", err)
+	}
+	fmt.Printf("User found: %+v\n", user)
+	if user.Password == password {
+		return &user, nil
 	}
 	return nil, fmt.Errorf("Invalid email or password")
 }
